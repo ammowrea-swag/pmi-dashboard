@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISM Manufacturing PMI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background: #ADD8E6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #1a202c;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+        
+        .last-updated {
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .metric-title {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-trend {
+            font-size: 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+        
+        .metric-change {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .metric-change.positive {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .metric-change.negative {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .metric-change.neutral {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .metric-info {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        
+        .expansion {
+            color: #38a169;
+            font-weight: 600;
+        }
+        
+        .contraction {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+        
+        .month-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+        
+        .month-controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .month-controls button:hover {
+            background: #5568d3;
+        }
+        
+        .month-controls button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        
+        .current-month {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1a202c;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .metric-value {
+                font-size: 2.2rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>ISM Manufacturing PMI Dashboard</h1>
+            <p>Institute for Supply Management - Purchasing Manager's Index</p>
+            <p class="last-updated">Latest Data: February 2026 | Released: March 2, 2026</p>
+        </div>
+
+        <div class="month-controls">
+            <button id="prevMonth">← Previous</button>
+            <div class="current-month" id="currentMonth">Jan 2026</div>
+            <button id="nextMonth">Next →</button>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid"></div>
+
+        <div class="chart-container">
+            <div class="chart-title">Manufacturing PMI® Trend (12 Months)</div>
+            <div class="chart-wrapper">
+                <canvas id="pmiChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">New Orders Index Trend</div>
+            <div class="chart-wrapper">
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Production Index Trend</div>
+            <div class="chart-wrapper">
+                <canvas id="productionChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Employment Index Trend</div>
+            <div class="chart-wrapper">
+                <canvas id="employmentChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Prices Index Trend</div>
+            <div class="chart-wrapper">
+                <canvas id="pricesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Key Information</div>
+            <div style="fontSize: 0.95rem; lineHeight: 1.8; color: #4a5568;">
+                <p style="marginBottom: 12px;">
+                    <strong>About the PMI:</strong> The ISM Manufacturing PMI® is a composite index based on five indicators: 
+                    New Orders (30%), Production (25%), Employment (20%), Supplier Deliveries (15%), and Inventories (10%).
+                </p>
+                <p style="marginBottom: 12px;">
+                    <strong>Reading above 50:</strong> Indicates expansion in the manufacturing sector
+                    <br />
+                    <strong>Reading below 50:</strong> Indicates contraction in the manufacturing sector
+                </p>
+                <p style="marginBottom: 12px;">
+                    <strong>Economic Indicator:</strong> A Manufacturing PMI® above 42.3% over time generally indicates 
+                    expansion of the overall economy (GDP).
+                </p>
+                <p>
+                    <strong>February 2026 Highlights:</strong> Manufacturing expanded for the second straight month at 52.4, 
+                    down slightly from 52.6 in January. While still in expansion territory, growth slowed compared to January. 
+                    Notable surge in the Prices Index to 70.5 (highest since June 2022), driven by steel/aluminum prices and tariff concerns. 
+                    Backlog of Orders jumped to 56.6 (highest since May 2022), indicating strong future demand.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extended historical data from January 2025 to February 2026
+        const allMonthsData = [
+            { month: 'Jan 2025', pmi: 50.9, newOrders: 52.5, production: 53.5, employment: 47.7, supplierDeliveries: 50.3, inventories: 49.1, prices: 44.1, backlogOrders: 43.1, newExportOrders: 45.2 },
+            { month: 'Feb 2025', pmi: 47.8, newOrders: 49.2, production: 48.4, employment: 45.9, supplierDeliveries: 51.3, inventories: 47.9, prices: 52.9, backlogOrders: 42.7, newExportOrders: 44.8 },
+            { month: 'Mar 2025', pmi: 49.2, newOrders: 51.4, production: 50.5, employment: 47.4, supplierDeliveries: 50.8, inventories: 48.5, prices: 55.8, backlogOrders: 43.9, newExportOrders: 45.5 },
+            { month: 'Apr 2025', pmi: 49.6, newOrders: 52.3, production: 52.1, employment: 48.6, supplierDeliveries: 49.6, inventories: 47.3, prices: 60.9, backlogOrders: 44.2, newExportOrders: 46.1 },
+            { month: 'May 2025', pmi: 48.7, newOrders: 45.4, production: 50.2, employment: 51.1, supplierDeliveries: 50.6, inventories: 47.6, prices: 57.0, backlogOrders: 42.5, newExportOrders: 44.3 },
+            { month: 'Jun 2025', pmi: 48.5, newOrders: 45.6, production: 48.5, employment: 49.3, supplierDeliveries: 52.0, inventories: 49.3, prices: 52.1, backlogOrders: 43.8, newExportOrders: 45.7 },
+            { month: 'Jul 2025', pmi: 46.8, newOrders: 46.7, production: 48.0, employment: 45.9, supplierDeliveries: 52.6, inventories: 48.5, prices: 52.9, backlogOrders: 42.1, newExportOrders: 44.6 },
+            { month: 'Aug 2025', pmi: 47.2, newOrders: 48.7, production: 51.5, employment: 46.7, supplierDeliveries: 50.4, inventories: 50.3, prices: 54.0, backlogOrders: 43.4, newExportOrders: 45.3 },
+            { month: 'Sep 2025', pmi: 48.7, newOrders: 49.4, production: 48.2, employment: 46.0, supplierDeliveries: 54.2, inventories: 45.8, prices: 58.0, backlogOrders: 44.1, newExportOrders: 45.8 },
+            { month: 'Oct 2025', pmi: 50.9, newOrders: 49.7, production: 51.7, employment: 46.4, supplierDeliveries: 52.0, inventories: 47.9, prices: 56.0, backlogOrders: 45.2, newExportOrders: 46.5 },
+            { month: 'Nov 2025', pmi: 48.2, newOrders: 47.4, production: 51.4, employment: 44.0, supplierDeliveries: 49.3, inventories: 48.9, prices: 58.5, backlogOrders: 44.6, newExportOrders: 45.9 },
+            { month: 'Dec 2025', pmi: 47.9, newOrders: 47.7, production: 51.0, employment: 44.9, supplierDeliveries: 50.8, inventories: 45.2, prices: 58.5, backlogOrders: 45.8, newExportOrders: 46.8 },
+            { month: 'Jan 2026', pmi: 52.6, newOrders: 57.1, production: 55.9, employment: 48.1, supplierDeliveries: 54.4, inventories: 47.6, prices: 59.0, backlogOrders: 51.6, newExportOrders: 50.2 },
+            { month: 'Feb 2026', pmi: 52.4, newOrders: 55.8, production: 53.5, employment: 48.8, inventories: 48.8, supplierDeliveries: 55.1, prices: 70.5, backlogOrders: 56.6, newExportOrders: 50.3 }
+        ];
+
+        const metricDefinitions = [
+            { key: 'pmi', title: 'Manufacturing PMI®', info: null },
+            { key: 'newOrders', title: 'New Orders Index', info: null },
+            { key: 'production', title: 'Production Index', info: null },
+            { key: 'employment', title: 'Employment Index', info: null },
+            { key: 'supplierDeliveries', title: 'Supplier Deliveries', info: 'Slower deliveries indicate growth' },
+            { key: 'inventories', title: 'Inventories Index', info: null },
+            { key: 'prices', title: 'Prices Index', info: null },
+            { key: 'backlogOrders', title: 'Backlog of Orders', info: null },
+            { key: 'newExportOrders', title: 'New Export Orders', info: null }
+        ];
+
+        // Chart data (last 13 months for display)
+        const historicalData = {
+            months: allMonthsData.map(d => d.month.replace(' 20', ' ')),
+            pmi: allMonthsData.map(d => d.pmi),
+            newOrders: allMonthsData.map(d => d.newOrders),
+            production: allMonthsData.map(d => d.production),
+            employment: allMonthsData.map(d => d.employment),
+            prices: allMonthsData.map(d => d.prices)
+        };
+
+        // State
+        let currentMonthIndex = allMonthsData.length - 1; // Start at latest month (Jan 2026)
+
+        // Get data for current month with change from previous
+        function getCurrentMetrics() {
+            const current = allMonthsData[currentMonthIndex];
+            const previous = currentMonthIndex > 0 ? allMonthsData[currentMonthIndex - 1] : null;
+            
+            return metricDefinitions.map(def => {
+                const value = current[def.key];
+                const prevValue = previous ? previous[def.key] : value;
+                const change = value - prevValue;
+                
+                return {
+                    title: def.title,
+                    value: value,
+                    change: change,
+                    previous: prevValue,
+                    info: def.info
+                };
+            });
+        }
+
+        // Render metric cards
+        function renderMetrics() {
+            const metricsGrid = document.getElementById('metricsGrid');
+            const metrics = getCurrentMetrics();
+            
+            metricsGrid.innerHTML = '';
+            
+            metrics.forEach(metric => {
+                const isExpanding = metric.value > 50;
+                const changeType = metric.change > 0 ? 'positive' : metric.change < 0 ? 'negative' : 'neutral';
+                const trendEmoji = metric.change > 0 ? '↑' : metric.change < 0 ? '↓' : '→';
+                
+                const card = document.createElement('div');
+                card.className = 'metric-card';
+                card.innerHTML = `
+                    <div class="metric-header">
+                        <div class="metric-title">${metric.title}</div>
+                        <div class="metric-trend">${trendEmoji}</div>
+                    </div>
+                    <div class="metric-value">${metric.value.toFixed(1)}</div>
+                    <div class="metric-change ${changeType}">
+                        ${metric.change > 0 ? '+' : ''}${metric.change.toFixed(1)} pts
+                    </div>
+                    <div class="metric-info">
+                        <div>Previous: ${metric.previous.toFixed(1)}</div>
+                        <div style="margin-top: 4px;">
+                            Status: <span class="${isExpanding ? 'expansion' : 'contraction'}">
+                                ${isExpanding ? 'Expansion' : 'Contraction'}
+                            </span>
+                        </div>
+                        ${metric.info ? `<div style="margin-top: 8px; font-style: italic;">${metric.info}</div>` : ''}
+                    </div>
+                `;
+                metricsGrid.appendChild(card);
+            });
+        }
+
+        // Update month display and button states
+        function updateMonthControls() {
+            document.getElementById('currentMonth').textContent = allMonthsData[currentMonthIndex].month;
+            document.getElementById('prevMonth').disabled = currentMonthIndex === 0;
+            document.getElementById('nextMonth').disabled = currentMonthIndex === allMonthsData.length - 1;
+        }
+
+        // Navigate months
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            if (currentMonthIndex > 0) {
+                currentMonthIndex--;
+                renderMetrics();
+                updateMonthControls();
+            }
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            if (currentMonthIndex < allMonthsData.length - 1) {
+                currentMonthIndex++;
+                renderMetrics();
+                updateMonthControls();
+            }
+        });
+
+        // Create charts
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                weight: '600',
+                                family: 'Georgia, serif'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold',
+                            family: 'Georgia, serif'
+                        },
+                        bodyFont: {
+                            size: 13,
+                            family: 'Georgia, serif'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 40,
+                        max: 65,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                family: 'Georgia, serif'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 12,
+                                family: 'Georgia, serif'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        function createChart(canvasId, label, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Determine y-axis scale based on chart type
+            let yMin = 40;
+            let yMax = 65;
+            
+            if (canvasId === 'pricesChart') {
+                yMin = 40;
+                yMax = 75;
+            }
+            
+            new Chart(ctx, {
+                ...chartConfig,
+                data: {
+                    labels: historicalData.months,
+                    datasets: [
+                        {
+                            label: label,
+                            data: data,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Threshold (50)',
+                            data: Array(historicalData.months.length).fill(50),
+                            borderColor: '#e53e3e',
+                            borderWidth: 2,
+                            borderDash: [10, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    ...chartConfig.options,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: yMin,
+                            max: yMax,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Georgia, serif'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: 'Georgia, serif'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        renderMetrics();
+        updateMonthControls();
+        
+        // Initialize charts
+        createChart('pmiChart', 'PMI', historicalData.pmi);
+        createChart('ordersChart', 'New Orders', historicalData.newOrders);
+        createChart('productionChart', 'Production', historicalData.production);
+        createChart('employmentChart', 'Employment', historicalData.employment);
+        createChart('pricesChart', 'Prices', historicalData.prices);
+    </script>
+</body>
+</html>
