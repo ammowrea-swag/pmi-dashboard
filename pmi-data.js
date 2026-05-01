@@ -1,7 +1,7 @@
 window.PMI_DATA = {
   meta: {
-    latestDataMonth: 'March 2026',
-    releaseDate: 'April 1, 2026'
+    latestDataMonth: 'April 2026',
+    releaseDate: 'May 1, 2026'
   },
   monthly: [
     { month: 'Jan 2025', pmi: 50.9, newOrders: 52.5, production: 53.5, employment: 47.7, supplierDeliveries: 50.3, inventories: 49.1, prices: 44.1, backlogOrders: 43.1, newExportOrders: 45.2 },
@@ -18,7 +18,8 @@ window.PMI_DATA = {
     { month: 'Dec 2025', pmi: 47.9, newOrders: 47.7, production: 51.0, employment: 44.9, supplierDeliveries: 50.8, inventories: 45.2, prices: 58.5, backlogOrders: 45.8, newExportOrders: 46.8 },
     { month: 'Jan 2026', pmi: 52.6, newOrders: 57.1, production: 55.9, employment: 48.1, supplierDeliveries: 54.4, inventories: 47.6, prices: 59.0, backlogOrders: 51.6, newExportOrders: 50.2 },
     { month: 'Feb 2026', pmi: 52.4, newOrders: 55.8, production: 53.5, employment: 48.8, supplierDeliveries: 55.1, inventories: 48.8, prices: 70.5, backlogOrders: 56.6, newExportOrders: 50.3 },
-    { month: 'Mar 2026', pmi: 52.7, newOrders: 53.5, production: 55.1, employment: 48.7, supplierDeliveries: 58.9, inventories: 47.1, prices: 78.3, backlogOrders: 54.4, newExportOrders: 49.9 }
+    { month: 'Mar 2026', pmi: 52.7, newOrders: 53.5, production: 55.1, employment: 48.7, supplierDeliveries: 58.9, inventories: 47.1, prices: 78.3, backlogOrders: 54.4, newExportOrders: 49.9 },
+    { month: 'Apr 2026', pmi: 52.7, newOrders: 54.1, production: 53.4, employment: 46.74, supplierDeliveries: 60.6, inventories: 49.0, prices: 84.6, backlogOrders: 51.4, newExportOrders: 47.9 },
   ],
   metrics: [
     { key: 'pmi', title: 'Manufacturing PMI®', info: null },
